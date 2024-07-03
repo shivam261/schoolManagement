@@ -25,6 +25,16 @@ const classSchema = new mongoose.Schema(
         ref: "Subject", // Reference to the Subject model
       },
     ],
+    fees: {
+      type: Number,
+      required: true,
+    },
+    students: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student", // Reference to the Student model
+      },
+    ],
   },
   { timestamps: true } // Adds createdAt and updatedAt fields automatically
 );

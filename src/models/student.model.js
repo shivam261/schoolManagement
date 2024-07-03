@@ -48,6 +48,20 @@ const studentSchema = new Schema(
       unique: true,
       match: [/^\d{12}$/, "Please enter a valid 12-digit Aadhaar number"],
     },
+    scholarship: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    fees: {
+      type: Number,
+      min: 0,
+    },
+    dueFees: {
+      type: Number,
+      default: 0,
+    },
     address: {
       street: {
         type: String,
