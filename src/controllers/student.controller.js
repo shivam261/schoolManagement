@@ -1,8 +1,6 @@
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-
-import bcrypt from "bcrypt";
 import { Student } from "../models/student.model.js";
 const generateAccessAndRefreshTokens = async (studentId) => {
   try {
@@ -122,16 +120,16 @@ const getAllStudents = asyncHandler(async (req, res) => {
 });
 
 const changePassword = asyncHandler(async (req, res) => {
-  const { email, currentPassword, newPassword } = req.body;
+  const {  currentPassword, newPassword } = req.body;
 
-  if (!email || !currentPassword || !newPassword) {
+  if (!currentPassword || !newPassword) {
     throw new ApiError(
       400,
       "Email, current password, and new password are required"
     );
   }
 
-  const student = await Student.findOne({ email });
+  const student = await Student.findById(req.student._id);
   if (!student) {
     throw new ApiError(404, "Student not found");
   }

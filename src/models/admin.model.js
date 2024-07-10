@@ -15,11 +15,7 @@ const adminSchema = new Schema(
       trim: true,
     },
     dateOfBirth: {
-      type: Date,
-      required: true,
-    },
-    age: {
-      type: Number,
+      type: String,
       required: true,
     },
     email: {
@@ -45,15 +41,16 @@ const adminSchema = new Schema(
   { timestamps: true }
 );
 adminSchema.pre("save", async function (next) {
-  const student = this;
-  if (!student.isModified("password")) return next();
+  const admin = this;
+  if (!admin.isModified("password")) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(student.password, salt);
-    student.password = hash;
+      admin.password =await bcrypt.hash(admin.password, salt);
+
     return next();
   } catch (error) {
+
     return next(error);
   }
 });

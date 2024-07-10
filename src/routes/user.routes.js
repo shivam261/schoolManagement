@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { isTeacher } from "../middlewares/isTeacher.middleware.js";
 import { isStudent } from "../middlewares/isStudent.middleware.js";
+import {isAdmin} from "../middlewares/isAdmin.middleware.js";
 import {
   changePassword as changeStudentPassword,
   getAllStudents,
@@ -13,6 +14,10 @@ import {
   addSubject,
   getAllSubjects,
   removeSubject,
+  registerAdmin,
+  loginAdmin,
+  logoutAdmin,
+    changePassword as changeAdminPassword,
 } from "../controllers/admin.controller.js";
 import {
   changePassword as changeTeacherPassword,
@@ -25,13 +30,6 @@ import {
 const router = Router();
 
 router.route("/register/student").post(registerStudent);
-
-router.route("/login/faculty").post(isTeacher, (req, res) => {
-  res.status(200).send({ message: "login route of faculty " });
-});
-router.route("/login/admin").post((req, res) => {
-  res.status(200).send({ message: "login route of admin" });
-});
 router.route("/admin/subject").post(addSubject);
 router.route("/admin/subject/remove").delete(removeSubject);
 router.route("/admin/subject/getall").get(getAllSubjects);
@@ -50,5 +48,9 @@ router
   .patch(isTeacher, changeTeacherPassword);
 router.route("/login/teacher").post(loginTeacher);
 router.route("/logout/teacher").post(isTeacher, logoutTeacher);
+router.route("/register/admin").post(registerAdmin);
+router.route("/login/admin").post(loginAdmin);
+router.route("/logout/admin").post(isAdmin, logoutAdmin);
+router.route("/admin/changepassword").patch(isAdmin, changeAdminPassword);
 
 export default router;

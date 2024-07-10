@@ -2,7 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Teacher } from "../models/teacher.model.js";
-import bcrypt from "bcrypt";
+
 const generateAccessAndRefreshTokens = async (teacherId) => {
   try {
     const teacher = await Teacher.findById(teacherId);
@@ -115,11 +115,11 @@ const removeTeacher = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, teacher, " teacher deleted successfully"));
 });
 const changePassword = asyncHandler(async (req, res) => {
-  const { currentPassword, newPassword, email } = req.body;
-  if (!currentPassword || !newPassword || !email) {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword ) {
     throw new ApiError(400, null, "missing fields");
   }
-  const teacher = await Teacher.findOne({ email });
+  const teacher = await Teacher.findById(req.teacher._id);
   const isValidPassword = await teacher.isPasswordCorrect(currentPassword);
   if (!isValidPassword) {
     throw new ApiError(401, null, "incorrect password");
