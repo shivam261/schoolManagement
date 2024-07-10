@@ -45,7 +45,9 @@ router.route("/logout/student").post(isStudent, logoutStudent);
 router.route("/register/teacher").post(registerTeacher);
 router.route("/admin/teachers/getall").get(getAllTeachers);
 router.route("/admin/teachers/remove").delete(removeTeacher);
-router.route("/admin/teachers/changepassword").patch(changeTeacherPassword);
+router
+  .route("/admin/teachers/changepassword")
+  .patch(isTeacher, changeTeacherPassword);
 router.route("/login/teacher").post(loginTeacher);
 router.route("/logout/teacher").post(isTeacher, logoutTeacher);
 
