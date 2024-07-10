@@ -1,26 +1,32 @@
-// Import necessary modules and Student model
+import jwt from "jsonwebtoken";
 import { Student } from "../models/student.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
-// Auth middleware for students
-const authStudent = async (req, res, next) => {
+const isStudent = asyncHandler(async (req, res, next) => {
   try {
-    // Assuming you have a way to identify the authenticated user, e.g., from JWT token
-    const userId = req.user.id; // Assuming user id is stored in req.user from authentication middleware
+    const token =
+      req.cookies?.accessToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
 
-    // Find student by userId
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      // If not a student, throw an error or handle as needed
-      throw new ApiError(401, "User is not authorized as a student");
+    if (!token) {
+      throw new ApiError(401, "unauthorized request");
     }
 
-    // If the user is a student, add student object to req
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+    const student = await Student.findById(decodedToken._id).select(
+      "-password -refreshToken"
+    );
+
+    if (!student) {
+      throw new ApiError(401, "User is not authorized as a student");
+    }
     req.student = student;
     next();
   } catch (error) {
-    next(error); // Pass any caught errors to the error handling middleware
+    next(error);
   }
-};
+});
 
-export { authStudent };
+export { isStudent };

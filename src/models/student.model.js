@@ -16,7 +16,7 @@ const studentSchema = new Schema(
       trim: true,
     },
     dateOfBirth: {
-      type: Date,
+      type: String,
       required: true,
     },
     dateJoined: {
@@ -25,7 +25,6 @@ const studentSchema = new Schema(
     },
     age: {
       type: Number,
-      required: true,
     },
     grade: {
       type: String,
@@ -37,9 +36,13 @@ const studentSchema = new Schema(
       unique: true,
       match: [/.+@.+\..+/, "Please enter a valid email address"],
     },
+    className: {
+      type: Schema.Types.ObjectId,
+      ref: "Class",
+    },
     rollNumber: {
       type: String,
-      unique: true,
+
       sparse: true, // Allows null/undefined values
     },
     adhaarNumber: {
@@ -92,19 +95,22 @@ const studentSchema = new Schema(
       type: String,
       required: true,
     },
+    refreshToken: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
 
 // Virtual property to calculate age based on date of birth
-studentSchema.virtual("age").get(function () {
+/* studentSchema.virtual("age").get(function () {
   const dob = this.dateOfBirth;
   if (!dob) return null;
 
   const diffMs = Date.now() - dob.getTime();
   const ageDate = new Date(diffMs);
-  return Math.abs(ageDate.getUTCFullYear() - 1970);
-});
+  return (this.age = Math.abs(ageDate.getUTCFullYear() - 1970));
+}); */
 
 // Method to hash the password before saving
 studentSchema.pre("save", async function (next) {

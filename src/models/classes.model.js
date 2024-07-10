@@ -8,31 +8,28 @@ const classSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-    classCode: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
     classTeacher: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teacher", // Reference to the Teacher model
       required: true,
     },
-    subjects: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Subject", // Reference to the Subject model
-      },
-    ],
     fees: {
       type: Number,
       required: true,
     },
+    totalCapacity: {
+      type: Number,
+      required: true,
+    },
+    availableCapacity: {
+      type: Number,
+    },
     students: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student", // Reference to the Student model
+        children: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Student",
+        },
       },
     ],
   },

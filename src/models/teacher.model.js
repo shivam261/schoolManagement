@@ -9,6 +9,11 @@ const classSchema = new Schema({
     ref: "Subject", // Reference to the Subject model
     required: true,
   },
+  toClass: {
+    type: Schema.Types.ObjectId,
+    ref: "Class",
+    required: true,
+  },
 });
 
 const teacherSchema = new Schema(
@@ -23,12 +28,8 @@ const teacherSchema = new Schema(
       required: true,
       trim: true,
     },
-    dateJoined: {
-      type: Date,
-      default: Date.now,
-    },
     dateOfBirth: {
-      type: Date,
+      type: String,
       required: true,
     },
     email: {
@@ -78,21 +79,18 @@ const teacherSchema = new Schema(
       type: String,
       required: true,
     },
+    mobileNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    refreshToken: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
 
-// Virtual property to calculate age based on date of birth
-teacherSchema.virtual("age").get(function () {
-  const dob = this.dateOfBirth;
-  if (!dob) return null;
-
-  const diffMs = Date.now() - dob.getTime();
-  const ageDate = new Date(diffMs);
-  return Math.abs(ageDate.getUTCFullYear() - 1970);
-});
-
-// Method to hash the password before saving
 teacherSchema.pre("save", async function (next) {
   const teacher = this;
   if (!teacher.isModified("password")) return next();

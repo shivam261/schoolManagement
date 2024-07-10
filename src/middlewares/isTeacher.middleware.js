@@ -1,26 +1,33 @@
-// Import necessary modules and models
 import { Teacher } from "../models/teacher.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import jwt from "jsonwebtoken";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
-// Middleware for teacher authentication
-const authTeacher = async (req, res, next) => {
+const isTeacher = asyncHandler(async (req, res, next) => {
   try {
-    // Assuming you have a way to identify the authenticated user, e.g., from JWT token
-    const userId = req.user.id; // Assuming user id is stored in req.user from authentication middleware
+    const token =
+      req.cookies?.accessToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
 
-    // Check if the user is a teacher
-    const teacher = await Teacher.findOne({ userId });
+    if (!token) {
+      throw new ApiError(401, "unauthorized request");
+    }
+
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+    const teacher = await Teacher.findById(decodedToken._id).select(
+      "-password -refreshToken"
+    );
+
     if (!teacher) {
-      // If not a teacher, throw an error or handle as needed
       throw new ApiError(401, "User is not authorized as a teacher");
     }
 
-    // If the user is a teacher, add teacher object to req
     req.teacher = teacher;
     next();
   } catch (error) {
-    next(error); // Pass any caught errors to the error handling middleware
+    next(error);
   }
-};
+});
 
-export { authTeacher };
+export { isTeacher };
