@@ -38,7 +38,7 @@ const studentSchema = new Schema(
     },
     className: {
       type: Schema.Types.ObjectId,
-      ref: "Class",
+      ref: "Grade",
     },
     rollNumber: {
       type: String,
@@ -59,6 +59,7 @@ const studentSchema = new Schema(
     },
     fees: {
       type: Number,
+      default: 0,
       min: 0,
     },
     dueFees: {

@@ -11,7 +11,7 @@ const classSchema = new Schema({
   },
   toClass: {
     type: Schema.Types.ObjectId,
-    ref: "Class",
+    ref: "Grade",
     required: true,
   },
 });

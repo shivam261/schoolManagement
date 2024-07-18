@@ -53,11 +53,11 @@ const registerStudent = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(400, " some fields are missing in register student ");
   }
-
   const existedStudent = await Student.findOne({ adhaarNumber });
   if (existedStudent) {
     throw new ApiError(409, " student already exist in database ");
   }
+
   const student = await Student.create({
     firstName,
     lastName,
@@ -120,7 +120,7 @@ const getAllStudents = asyncHandler(async (req, res) => {
 });
 
 const changePassword = asyncHandler(async (req, res) => {
-  const {  currentPassword, newPassword } = req.body;
+  const { currentPassword, newPassword } = req.body;
 
   if (!currentPassword || !newPassword) {
     throw new ApiError(
@@ -165,7 +165,7 @@ const loginStudent = asyncHandler(async (req, res) => {
   );
   const options = {
     httpOnly: true,
-    secure: true,
+    secure: process.env.PRODUCTION === "production",
   };
   return res
     .status(200)
@@ -185,7 +185,7 @@ const logoutStudent = asyncHandler(async (req, res) => {
   );
   const options = {
     httpOnly: true,
-    secure: true,
+    secure: process.env.PRODUCTION === "production",
   };
   return res
     .status(200)

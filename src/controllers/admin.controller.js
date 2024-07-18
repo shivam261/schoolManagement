@@ -2,8 +2,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Subject } from "../models/subject.model.js";
-import {Admin} from "../models/admin.model.js";
-import {Student} from "../models/student.model.js";
+import { Admin } from "../models/admin.model.js";
+import { Student } from "../models/student.model.js";
+import { Grade } from "../models/classes.model.js";
 const generateAccessAndRefreshTokens = async (adminId) => {
   try {
     const admin = await Admin.findById(adminId);
@@ -72,76 +73,95 @@ const getAllSubjects = asyncHandler(async (req, res) => {
 });
 
 const registerAdmin = asyncHandler(async (req, res) => {
-  const { firstName, lastName, dateOfBirth, email, password, adhaarNumber } = req.body;
+  const { firstName, lastName, dateOfBirth, email, password, adhaarNumber } =
+    req.body;
 
-  if (!firstName || !lastName || !dateOfBirth || !email || !password || !adhaarNumber) {
+  if (
+    !firstName ||
+    !lastName ||
+    !dateOfBirth ||
+    !email ||
+    !password ||
+    !adhaarNumber
+  ) {
     throw new ApiError(400, "All fields are required");
   }
 
-  const existingAdmin = await Admin.findOne({ $or: [{ email }, { adhaarNumber }] });
+  const existingAdmin = await Admin.findOne({
+    $or: [{ email }, { adhaarNumber }],
+  });
   if (existingAdmin) {
-    throw new ApiError(409, "Admin with the provided email or Aadhaar number already exists");
+    throw new ApiError(
+      409,
+      "Admin with the provided email or Aadhaar number already exists"
+    );
   }
-  const  admin  = await Admin.create({
+  const admin = await Admin.create({
     firstName,
     lastName,
     dateOfBirth,
     email,
     password,
-    adhaarNumber
+    adhaarNumber,
   });
-  const createdAdmin= await Admin.findOne({email}).select("-password -refreshToken");
+  const createdAdmin = await Admin.findOne({ email }).select(
+    "-password -refreshToken"
+  );
   if (!createdAdmin) {
     throw new ApiError(404, "Admin with the provided email does not exist");
   }
   return res
-      .status(200)
-      .json(new ApiResponse(200, createdAdmin, "Admin added successfully"));
-})
+    .status(200)
+    .json(new ApiResponse(200, createdAdmin, "Admin added successfully"));
+});
 
 const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     throw new ApiError(401, "Email field is required");
   }
-  const admin=await Admin.findOne({email});
-  if(!admin){
+  const admin = await Admin.findOne({ email });
+  if (!admin) {
     throw new ApiError(401, "Admin with the provided email does not exist");
   }
-  const isValidPassword=await  admin.isPasswordCorrect(password);
-  if(!isValidPassword){
+  const isValidPassword = await admin.isPasswordCorrect(password);
+  if (!isValidPassword) {
     throw new ApiError(401, "Invalid password");
   }
-  const {accessToken ,refreshToken} = await generateAccessAndRefreshTokens(admin._id);
-  const options={
-    httponly:true,
-    secure:true
-  }
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    admin._id
+  );
+  const options = {
+    httponly: true,
+    secure: process.env.PRODUCTION === "production",
+  };
   return res
-      .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .json(new ApiResponse(200,null," admin logged in"));
-})
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(200, null, " admin logged in"));
+});
 
 const logoutAdmin = asyncHandler(async (req, res) => {
-  await Admin.findByIdAndUpdate(req.admin._id,{
-    $unset:{
-      refreshToken: 1,
-    }
-  },
-      {new :true});
-  const options={
-    httponly:true,
-    secure:true
-  }
+  await Admin.findByIdAndUpdate(
+    req.admin._id,
+    {
+      $unset: {
+        refreshToken: 1,
+      },
+    },
+    { new: true }
+  );
+  const options = {
+    httponly: true,
+    secure: process.env.PRODUCTION === "production",
+  };
   return res
-      .status(200)
-      .clearCookie("accessToken", options)
-      .clearCookie("refreshToken", options)
-      .json(new ApiResponse(200, null, " admin logged out"));
-
-})
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, null, " admin logged out"));
+});
 
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -164,10 +184,137 @@ const changePassword = asyncHandler(async (req, res) => {
   admin.password = newPassword;
   await admin.save();
 
- // const updatedAdmin = await Admin.findById(req.admin._id).select("-password -refreshToken");
+  // const updatedAdmin = await Admin.findById(req.admin._id).select("-password -refreshToken");
 
   return res
-      .status(200)
-      .json(new ApiResponse(200, admin, "Password changed successfully"));
+    .status(200)
+    .json(new ApiResponse(200, admin, "Password changed successfully"));
 });
-export { addSubject, removeSubject, getAllSubjects ,registerAdmin, loginAdmin ,logoutAdmin,changePassword};
+
+const addClass = asyncHandler(async (req, res) => {
+  const { className, classTeacher, fees, totalCapacity, students } = req.body;
+  if (!students) {
+    throw new ApiError(401, "students are required");
+  }
+  if (!className || !classTeacher || !fees || !totalCapacity) {
+    throw new ApiError(401, "All fields are required");
+  }
+  const existedClass = await Grade.findOne({ className });
+  if (existedClass) {
+    throw new ApiError(401, "already exists");
+  }
+  const createdClass = await Grade.create({
+    className,
+    classTeacher,
+    fees,
+    totalCapacity,
+    students,
+  });
+  if (!createdClass) {
+    throw new ApiError(401, "class not created");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, createdClass, "Class created "));
+});
+const getClasses = asyncHandler(async (req, res) => {
+  const classes = await Grade.find();
+  if (!classes) {
+    throw new ApiError(401, "no class found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, classes, "these are the clasess"));
+});
+const addStudentInClass = asyncHandler(async (req, res) => {
+  const { studentId, gradeId } = req.body;
+  if (!studentId) {
+    throw new ApiError(401, "Student id is required");
+  }
+  if (!gradeId) {
+    throw new ApiError(401, "Grade id is required");
+  }
+  const student = await Student.findById(studentId);
+  if (!student) {
+    throw new ApiError(401, "could not find any student with this studentId");
+  }
+
+  const grade = await Grade.findById(gradeId);
+
+  if (!grade) {
+    throw new ApiError(401, "class not found");
+  }
+  student.className = grade._id;
+  student.dueFees = grade.fees;
+  await student.save();
+  const existingStudent = grade.students.find(
+    (existingStudentId) => existingStudentId.toString() === studentId
+  );
+
+  if (existingStudent) {
+    throw new ApiError(409, "Student already exists in the grade");
+  }
+
+  grade.students.push(studentId);
+
+  await grade.save();
+  return res
+    .status(200)
+    .json(new ApiResponse(200, grade, "Student added successfully"));
+});
+const feePayment = asyncHandler(async (req, res) => {
+  const { amount, adhaarNumber } = req.body;
+  if (!amount || !adhaarNumber) {
+    throw new ApiError(401, "feilds are missing");
+  }
+  if (amount <= 0) {
+    throw new ApiError(401, "amount cannot be zero");
+  }
+  try {
+    const student = await Student.findOne({ adhaarNumber }).select(
+      "-password -refreshToken -address"
+    );
+    student.dueFees = student.dueFees - amount;
+    student.fees += amount;
+    await student.save({ validateBeforeSave: false });
+    return res.status(201).json(new ApiResponse(201, null, "Fees Paid"));
+  } catch (error) {
+    throw new ApiError(500, "server side error (database)");
+  }
+});
+const scholarship = asyncHandler(async (req, res) => {
+  const { amount, studentId } = req.body;
+  if (!amount || !studentId) {
+    throw new ApiError(401, "feilds are missing");
+  }
+  if (amount <= 0) {
+    throw new ApiError(401, "amount cannot be zero");
+  }
+  try {
+    const student = await Student.findById(studentId).select(
+      "-password -refreshToken -address"
+    );
+    student.scholarship = amount;
+    student.dueFees -= amount;
+    await student.save({ validateBeforeSave: false });
+    return res
+      .status(201)
+      .json(new ApiResponse(201, null, "Scholarship provided"));
+  } catch (error) {
+    throw new ApiError(500, "server side error (database)");
+  }
+});
+export {
+  addSubject,
+  removeSubject,
+  getAllSubjects,
+  registerAdmin,
+  loginAdmin,
+  logoutAdmin,
+  changePassword,
+  addClass,
+  getClasses,
+  addStudentInClass,
+  feePayment,
+  scholarship,
+};

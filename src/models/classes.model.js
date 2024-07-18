@@ -1,41 +1,41 @@
-import mongoose from "mongoose";
+import mongoose,{Schema} from "mongoose";
+const classeSchema = new Schema({
+    className:{
+        type: String,
+        required: true,
+        unique: true
+    },
+    classTeacher:{
+        type: Schema.Types.ObjectId,
+        ref: "Teacher",
+        required: true,
+    },
+    fees:{
+        type: Number,
+        required: true,
+    },
+    totalCapacity:{
+        type: Number,
+        required: true,
+    },
+    availableCapacity:{
+        type: Number,
+    },
+    students:[
+        {
+            type: mongoose.Schema.Types.ObjectId,
+             ref: "Student"
+        }],
 
-const classSchema = new mongoose.Schema(
-  {
-    className: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    classTeacher: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Teacher", // Reference to the Teacher model
-      required: true,
-    },
-    fees: {
-      type: Number,
-      required: true,
-    },
-    totalCapacity: {
-      type: Number,
-      required: true,
-    },
-    availableCapacity: {
-      type: Number,
-    },
-    students: [
-      {
-        children: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Student",
-        },
-      },
-    ],
-  },
-  { timestamps: true } // Adds createdAt and updatedAt fields automatically
-);
 
-const Class = mongoose.model("Class", classSchema);
-
-export { Class };
+},{timestamps: true});
+classeSchema.pre("save", async function(next){
+    const grade=this;
+    this.availableCapacity=this.totalCapacity-this.students.length;
+    if(this.availableCapacity<0){
+        next(new Error("No available capacity"));
+    }
+    next();
+})
+const Grade= mongoose.model("Grade",classeSchema);
+export  {Grade};

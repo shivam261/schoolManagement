@@ -116,7 +116,7 @@ const removeTeacher = asyncHandler(async (req, res) => {
 });
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword ) {
+  if (!currentPassword || !newPassword) {
     throw new ApiError(400, null, "missing fields");
   }
   const teacher = await Teacher.findById(req.teacher._id);
@@ -159,7 +159,7 @@ const loginTeacher = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
+    secure: process.env.PRODUCTION === "production",
   };
 
   return res
@@ -178,7 +178,7 @@ const logoutTeacher = asyncHandler(async (req, res) => {
   );
   const options = {
     httpOnly: true,
-    secure: true,
+    secure: process.env.PRODUCTION === "production",
   };
   return res
     .status(200)
